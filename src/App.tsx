@@ -1,13 +1,27 @@
+import { Routes, Route, Navigate } from "react-router-dom"
+import { DashboardLayout } from "@/dashboard/DashboardLayout"
+import RoleSelector from "@/pages/RoleSelector"
+import Inicio from "@/dashboard/pages/Inicio"
+import Mesas from "@/dashboard/pages/Mesas"
+import Configuraciones from "@/dashboard/pages/Configuraciones"
+import Ordenes from "@/dashboard/pages/Ordenes"
+import Pendientes from "@/dashboard/pages/Pendientes"
+import Usuarios from "@/dashboard/pages/Usuarios"
 
 export function App() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Hello World!</h1>
-        </div>
-      </div>
-    </div>
+    <Routes>
+      <Route path="/" element={<RoleSelector />} />
+      <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route index element={<Inicio />} />
+        <Route path="mesas" element={<Mesas />} />
+        <Route path="configuraciones" element={<Configuraciones />} />
+        <Route path="ordenes" element={<Ordenes />} />
+        <Route path="pendientes" element={<Pendientes />} />
+        <Route path="usuarios" element={<Usuarios />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
