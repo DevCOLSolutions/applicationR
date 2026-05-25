@@ -1,5 +1,5 @@
-import { Navigate, NavLink, Outlet, useNavigate } from "react-router-dom"
-import { Home, Table2, Settings, Clock, Users, ClipboardList, Plus, UtensilsCrossed, LogOut, ChefHat, Activity } from "lucide-react"
+import { Navigate, NavLink, Outlet } from "react-router-dom"
+import { Home, Table2, Settings, Clock, Users, ClipboardList, Plus, UtensilsCrossed } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store"
 import { logout } from "@/lib/mock-api"
@@ -18,12 +18,17 @@ const meseroNav: NavItem[] = [
   { to: "/dashboard/configuraciones", icon: Settings, label: "Config." },
 ]
 
-const adminNav: NavItem[] = [
-  { to: "/dashboard", icon: Home, label: "Inicio", end: true },
-  { to: "/dashboard/mesas", icon: Table2, label: "Mesas" },
-  { to: "/dashboard/usuarios", icon: Users, label: "Usuarios" },
-  { to: "/dashboard/ordenes", icon: ClipboardList, label: "Órdenes" },
-  { to: "/dashboard/configuraciones", icon: Settings, label: "Config." },
+const adminBottomNav: {
+  to: string
+  icon: typeof LayoutGrid
+  label: string
+  end?: boolean
+  isCenter?: boolean
+}[] = [
+  { to: "/dashboard/mesas", icon: LayoutGrid, label: "Tables" },
+  { to: "/dashboard/configuraciones", icon: UtensilsCrossed, label: "Menu" },
+  { to: "/dashboard", icon: Cog, label: "ADMIN", end: true, isCenter: true },
+  { to: "/dashboard/stats", icon: BarChart3, label: "Stats" },
 ]
 
 // ── MESERO mobile nav ───────────────────────────────────────────────────────
@@ -164,113 +169,76 @@ function MeseroSidebarLink({ to, icon: Icon, label, end }: NavItem) {
   )
 }
 
-// ── ADMIN sidebar ───────────────────────────────────────────────────────────
-function AdminSidebar({ userName, onLogout }: { userName: string; onLogout: () => void }) {
-  return (
-    <aside className="hidden md:flex md:flex-col h-full bg-blue-50 border-r border-blue-100">
-      {/* Brand */}
-      <div className="flex h-16 items-center gap-3 border-b border-blue-100 px-5">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-blue-600 shadow-md shadow-blue-200">
-          <Users className="size-4 text-white" strokeWidth={2.5} />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-blue-700 leading-tight">Admin</p>
-          <p className="text-xs text-slate-400 leading-none">{userName}</p>
-        </div>
-        <button
-          onClick={onLogout}
-          className="ml-auto text-slate-300 hover:text-red-400 transition-colors"
-          title="Cerrar sesión"
-        >
-          <LogOut className="size-4" />
-        </button>
-      </div>
+export function DashboardLayout() {
+  const { role, setRole } = useRole()
 
-      {/* Nav */}
-      <nav className="flex flex-col gap-0.5 px-3 pt-5">
-        <p className="mb-1 px-2 text-[10px] font-bold tracking-widest uppercase text-slate-400">Panel</p>
-        {adminNav.map((item) => (
-          <AdminSidebarLink key={item.to} {...item} />
-        ))}
+  if (!role) return <Navigate to="/" replace />
+
+  const roleLabel = role === "mesero" ? "Mesero" : "Admin"
+  const RoleIcon = role === "mesero" ? UtensilsCrossed : Users
+
+  return (
+    <div className="flex min-h-dvh bg-background md:grid md:grid-cols-[240px_1fr]">
+      {/* Mobile bottom nav */}
+      <nav className="safe-bottom fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t bg-background px-2 pb-safe-or-2 pt-1 md:hidden">
+        {role === "mesero" ? (
+          <>
+            <NavLinkItem {...meseroNav[0]} />
+            <NavLinkItem {...meseroNav[1]} />
+            <div className="relative flex items-center justify-center">
+              <button className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95 -mt-5">
+                <Plus className="size-7" />
+              </button>
+            </div>
+            <NavLinkItem {...meseroNav[2]} />
+            <NavLinkItem {...meseroNav[3]} />
+          </>
+        ) : (
+          adminNav.map((item) => <NavLinkItem key={item.to} {...item} />)
+        )}
       </nav>
 
-      {/* Footer */}
-      <div className="mt-auto px-4 py-5">
-        <div className="rounded-xl border border-blue-200 bg-white px-4 py-3 shadow-sm">
-          <p className="text-[10px] font-bold tracking-widest uppercase text-blue-400 mb-2">Sistema</p>
-          <div className="flex items-center gap-2">
-            <Activity className="size-3.5 text-emerald-500" />
-            <span className="text-[11px] text-slate-500">Operativo</span>
-            <span className="ml-auto size-2 rounded-full bg-emerald-400 animate-pulse" />
-          </div>
+
+
+      {/* Desktop sidebar */}
+      <aside className="hidden border-r bg-muted/30 md:flex md:flex-col md:pb-0">
+        <div className="flex h-14 items-center gap-2 border-b px-5 font-semibold">
+          <RoleIcon className="size-5" />
+          <span className="text-lg">{roleLabel}</span>
         </div>
-      </div>
-    </aside>
-  )
-}
 
-function AdminSidebarLink({ to, icon: Icon, label, end }: NavItem) {
-  return (
-    <NavLink
-      to={to}
-      end={end}
-      className={({ isActive }) =>
-        cn(
-          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-          isActive
-            ? "bg-white text-blue-700 shadow-sm"
-            : "text-slate-500 hover:bg-white/70 hover:text-slate-700",
-        )
-      }
-    >
-      {({ isActive }) => (
-        <>
-          <span className={cn(
-            "flex size-7 items-center justify-center rounded-lg transition-all",
-            isActive ? "bg-blue-100" : "bg-slate-100",
-          )}>
-            <Icon className="size-3.5" strokeWidth={isActive ? 2.5 : 1.8} />
-          </span>
-          {label}
-          {isActive && (
-            <span className="ml-auto size-1.5 rounded-full bg-blue-500" />
+        <div className="flex items-center justify-between gap-2 border-b px-5 py-2 text-xs text-muted-foreground">
+          <span>{roleLabel}</span>
+          <button
+            onClick={() => setRole(null)}
+            className="text-xs underline hover:text-foreground"
+          >
+            Cambiar rol
+          </button>
+        </div>
+
+        <nav className="flex flex-col gap-1 p-3">
+          {role === "mesero" ? (
+            <>
+              <SidebarLinkItem {...meseroNav[0]} />
+              <SidebarLinkItem {...meseroNav[1]} />
+              <div className="my-1">
+                <button className="flex w-full items-center gap-3 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors active:scale-[0.98]">
+                  <Plus className="size-4" />
+                  Nueva orden
+                </button>
+              </div>
+              <SidebarLinkItem {...meseroNav[2]} />
+              <SidebarLinkItem {...meseroNav[3]} />
+            </>
+          ) : (
+            adminNav.map((item) => <SidebarLinkItem key={item.to} {...item} />)
           )}
-        </>
-      )}
-    </NavLink>
-  )
-}
+        </nav>
+      </aside>
 
-// ── Layout root ─────────────────────────────────────────────────────────────
-export function DashboardLayout() {
-  const { user, logout: authLogout } = useAuthStore()
-  const navigate = useNavigate()
-
-  if (!user) return <Navigate to="/" replace />
-
-  const role = user.role
-
-  const handleLogout = async () => {
-    await logout()
-    authLogout()
-    navigate("/")
-  }
-
-  return (
-    <div className={cn(
-      "flex min-h-dvh",
-      role === "mesero" ? "bg-orange-50/40" : "bg-blue-50/40",
-      "md:grid md:grid-cols-[240px_1fr]",
-    )}>
-      {role === "mesero" ? (
-        <MeseroSidebar userName={user.name} onLogout={handleLogout} />
-      ) : (
-        <AdminSidebar userName={user.name} onLogout={handleLogout} />
-      )}
-
-      {role === "mesero" ? <MeseroMobileNav /> : <AdminMobileNav />}
-
-      <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
         <Outlet />
       </main>
     </div>
