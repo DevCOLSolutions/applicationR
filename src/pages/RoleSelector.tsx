@@ -1,13 +1,18 @@
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useRole } from "@/lib/role-context"
-import { UtensilsCrossed, ShieldCheck } from "lucide-react"
+import { UtensilsCrossed, ShieldCheck, Loader2 } from "lucide-react"
+import { useAuthStore } from "@/lib/store"
+import { login } from "@/lib/mock-api"
 
 export function RoleSelector() {
-  const { setRole } = useRole()
+  const [loading, setLoading] = useState<"mesero" | "admin" | null>(null)
+  const authLogin = useAuthStore((s) => s.login)
   const navigate = useNavigate()
 
-  const selectRole = (role: "mesero" | "admin") => {
-    setRole(role)
+  const handleSelectRole = async (role: "mesero" | "admin") => {
+    setLoading(role)
+    const user = await login(role === "mesero" ? "mes-1" : "adm-1")
+    authLogin(user)
     navigate("/dashboard")
   }
 
@@ -22,11 +27,16 @@ export function RoleSelector() {
 
       <div className="flex w-full max-w-xs flex-col gap-4">
         <button
-          onClick={() => selectRole("mesero")}
-          className="flex items-center gap-4 rounded-xl border p-5 text-left transition-colors hover:bg-muted active:bg-muted/80"
+          onClick={() => handleSelectRole("mesero")}
+          disabled={loading !== null}
+          className="flex items-center gap-4 rounded-xl border p-5 text-left transition-colors hover:bg-muted active:bg-muted/80 disabled:opacity-60"
         >
           <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <UtensilsCrossed className="size-6" />
+            {loading === "mesero" ? (
+              <Loader2 className="size-6 animate-spin" />
+            ) : (
+              <UtensilsCrossed className="size-6" />
+            )}
           </div>
           <div>
             <div className="font-medium">Mesero</div>
@@ -37,11 +47,16 @@ export function RoleSelector() {
         </button>
 
         <button
-          onClick={() => selectRole("admin")}
-          className="flex items-center gap-4 rounded-xl border p-5 text-left transition-colors hover:bg-muted active:bg-muted/80"
+          onClick={() => handleSelectRole("admin")}
+          disabled={loading !== null}
+          className="flex items-center gap-4 rounded-xl border p-5 text-left transition-colors hover:bg-muted active:bg-muted/80 disabled:opacity-60"
         >
           <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <ShieldCheck className="size-6" />
+            {loading === "admin" ? (
+              <Loader2 className="size-6 animate-spin" />
+            ) : (
+              <ShieldCheck className="size-6" />
+            )}
           </div>
           <div>
             <div className="font-medium">Admin</div>
